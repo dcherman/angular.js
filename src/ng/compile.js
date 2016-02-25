@@ -2426,6 +2426,14 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
           }
         });
 
+        (isolateScope || scope).$on('$destroy', function() {
+          forEach(elementControllers, function(controller) {
+            if (isFunction(controller.instance.$onDestroy)) {
+              controller.instance.$onDestroy();
+            }
+          });
+        });
+
         // PRELINKING
         for (i = 0, ii = preLinkFns.length; i < ii; i++) {
           linkFn = preLinkFns[i];

@@ -5351,6 +5351,60 @@ describe('$compile', function() {
       });
     });
 
+    it("should call `controller.$onDestroy`, if provided after the scope has been destroyed", function() {
+      function check() {
+        /*jshint validthis:true */
+        expect(this.element.controller('d1').id).toEqual(1);
+        expect(this.element.controller('d2').id).toEqual(2);
+      }
+
+      function Controller1($element) { this.id = 1; this.element = $element; }
+      Controller1.prototype.$onDestroy = jasmine.createSpy('$onDestroy').andCallFake(check);
+
+      function Controller2($element) { this.id = 2; this.element = $element; }
+      Controller2.prototype.$onDestroy = jasmine.createSpy('$onDestroy').andCallFake(check);
+
+      angular.module('my', [])
+        .directive('d1', valueFn({ controller: Controller1 }))
+        .directive('d2', valueFn({ controller: Controller2 }));
+
+      module('my');
+      inject(function($compile, $rootScope) {
+        var scope = $rootScope.$new();
+        element = $compile('<div d1 d2></div>')(scope);
+        scope.$destroy();
+        expect(Controller1.prototype.$onDestroy).toHaveBeenCalledOnce();
+        expect(Controller2.prototype.$onDestroy).toHaveBeenCalledOnce();
+      });
+    });
+
+    it("should call `controller.$onDestroy`, if provided after the isolateScope has been destroyed", function() {
+      function check() {
+        /*jshint validthis:true */
+        expect(this.element.controller('d1').id).toEqual(1);
+        expect(this.element.controller('d2').id).toEqual(2);
+      }
+
+      function Controller1($element) { this.id = 1; this.element = $element; }
+      Controller1.prototype.$onDestroy = jasmine.createSpy('$onDestroy').andCallFake(check);
+
+      function Controller2($element) { this.id = 2; this.element = $element; }
+      Controller2.prototype.$onDestroy = jasmine.createSpy('$onDestroy').andCallFake(check);
+
+      angular.module('my', [])
+        .directive('d1', valueFn({ controller: Controller1 }))
+        .directive('d2', valueFn({ controller: Controller2 }));
+
+      module('my');
+      inject(function($compile, $rootScope) {
+        var scope = $rootScope.$new(true);
+        element = $compile('<div d1 d2></div>')(scope);
+        scope.$destroy();
+        expect(Controller1.prototype.$onDestroy).toHaveBeenCalledOnce();
+        expect(Controller2.prototype.$onDestroy).toHaveBeenCalledOnce();
+      });
+    });
+
     describe('should not overwrite @-bound property each digest when not present', function() {
       it('when creating new scope', function() {
         module(function($compileProvider) {
