@@ -768,6 +768,8 @@ function $RootScopeProvider() {
             watchLog = [],
             logIdx, asyncTask;
 
+        $rootScope.$target = target;
+
         beginPhase('$digest');
         // Check for changes to browser url that happened in sync before the call to $digest
         $browser.$$checkUrlChange();
@@ -876,6 +878,7 @@ function $RootScopeProvider() {
           }
         }
         postDigestQueue.length = postDigestQueuePosition = 0;
+        $rootScope.$target = null;
       },
 
 

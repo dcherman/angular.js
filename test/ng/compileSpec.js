@@ -4737,6 +4737,40 @@ describe('$compile', function() {
               expect(errors.pop()).toEqual(new Error('bad hook: 42'));
             });
           });
+
+          it('should only invoke the digest cycle on the originating scope', function() {
+            var $onChanges = jasmine.createSpy('$onChanges');
+
+            angular.module('my', [])
+              .component('c1', {
+                controller: function() {
+                  this.$onChanges = $onChanges;
+                },
+                bindings: { 'prop1': '<' }
+              });
+
+            module('my');
+            inject(function($compile, $rootScope) {
+              var $scope = $rootScope.$new();
+              var rootScopeWatcher = jasmine.createSpy('rootScopeWatcher');
+
+              element = $compile('<c1 prop1="val"></c1>')($scope);
+
+              // Clear out initial changes
+              $onChanges.calls.reset();
+
+              $rootScope.$watch(rootScopeWatcher);
+
+              $scope.val = 1;
+              $scope.$digest();
+
+              expect($onChanges.calls.count()).toBe(1);
+              expect($onChanges.calls.argsFor(0)).toEqual([
+                { prop1: jasmine.objectContaining({ currentValue: 1 }) }
+              ]);
+              expect(rootScopeWatcher).not.toHaveBeenCalled();
+            });
+          });
         });
       });
 
